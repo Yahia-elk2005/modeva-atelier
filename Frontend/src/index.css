@@ -1,0 +1,69 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'react-toastify/dist/ReactToastify.css';
+@import 'swiper/css';
+@import 'swiper/css/navigation';
+@import 'swiper/css/pagination';
+
+:root {
+  --primary-teal: #008B8B;
+  --bg-light: #f8f9fa;
+}
+body {
+  font-family: 'Times New Roman', Times, serif;
+  overflow-x: hidden;
+}
+.text-teal {
+  color: var(--primary-teal);
+}
+.bg-teal {
+  background-color: var(--primary-teal);
+}
+.btn-teal {
+  background-color: var(--primary-teal);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+}
+.hero-section {
+  background-image: url('https://placehold.co/1920x800');
+  background-size: cover;
+  background-position: center;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+}
+.product-card-img {
+  height: 300px;
+  object-fit: cover;
+}
+.rating-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--primary-teal);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-family: sans-serif;
+  font-size: 0.8rem;
+}
+.Toastify__toast {
+  border-radius: 8px !important;
+  font-family: inherit !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+  padding: 12px 16px !important;
+}
+.Toastify__toast--success {
+  background-color: #008B8B !important; 
+  color: #ffffff !important;
+}
+.Toastify__toast--error {
+  background-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+.Toastify__progress-bar--success {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+.Toastify__progress-bar--error {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
