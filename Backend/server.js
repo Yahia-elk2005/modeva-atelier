@@ -6,7 +6,6 @@ setServers(["8.8.8.8" , "8.8.4.4"]);
 
 const app = require("./app");
 
-// التعديل هنا: تمت إضافة /src قبل مسار مجلد config
 const connectDB = require("./src/config/connectDB");
 
 app.set("query parser", "extended");

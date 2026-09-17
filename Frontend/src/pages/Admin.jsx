@@ -35,7 +35,7 @@ const Admin = () => {
     try {
       const prodRes = await axiosInstance.get('/products');
       setProducts(prodRes.data.data || []);
-             
+          
       const ordRes = await axiosInstance.get('/orders');
       setOrders(ordRes.data.data || []);
 
@@ -187,7 +187,7 @@ const Admin = () => {
   const handleUpdateOrderStatus = async (id, newStatus) => {
     try {
       if(newStatus === 'Dispatched') {
-         await axiosInstance.patch(`/orders/${id}`);
+        await axiosInstance.patch(`/orders/${id}`);
       }
       toast.success(`Order status updated to ${newStatus}!`);
       fetchData();

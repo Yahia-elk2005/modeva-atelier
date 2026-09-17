@@ -50,7 +50,7 @@ const Navigation = () => {
       window.removeEventListener('wishlistUpdated', fetchUserDataAndWishlist);
       window.removeEventListener('authUpdated', fetchUserDataAndWishlist);
     };
-  }, []); // تم ترك مصفوفة الاعتبارات فارغة لضمان عدم تكرار الطلبات بلا حدود
+  }, []); 
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();

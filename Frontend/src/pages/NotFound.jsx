@@ -9,7 +9,6 @@ const NotFound = () => {
 
   return (
     <Container className="my-5 py-5">
-      {/* قسم الـ 404 الرئيسي */}
       <Row className="align-items-center mb-5">
         <Col lg={7} className="mb-4 mb-lg-0">
           <div className="d-flex align-items-center gap-2 mb-2">
@@ -46,7 +45,6 @@ const NotFound = () => {
           </div>
         </Col>
 
-        {/* صورة جانبية بتصميم فخم */}
         <Col lg={5}>
           <div className="p-3 bg-light border">
             <div className="position-relative overflow-hidden bg-white" style={{ height: '400px' }}>
@@ -68,7 +66,6 @@ const NotFound = () => {
         </Col>
       </Row>
 
-      {/* قسم المساعدة وخدمة العملاء */}
       <div className="p-4 bg-light my-5 border">
         <div className="bg-white p-4 p-md-5 d-flex flex-column flex-md-row justify-content-between align-items-center gap-4">
           <div>

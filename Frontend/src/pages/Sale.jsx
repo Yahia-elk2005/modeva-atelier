@@ -12,7 +12,6 @@ const Sale = () => {
     axiosInstance.get('/products')
       .then(res => {
         const allProducts = res.data.data || [];
-        // تصفية المنتجات بحيث لا يظهر في السيل إلا ما فعله الأدمن (onSale === true)
         const saleProducts = allProducts.filter(p => p.onSale === true);
         setProducts(saleProducts);
         setLoading(false);
@@ -44,7 +43,6 @@ const Sale = () => {
       ) : (
         <Row className="g-4">
           {products.map(product => {
-            // تمرير السعر المخفض للبطاقة إذا كان موجوداً
             const displayProduct = {
               ...product,
               price: product.discountPrice ? product.discountPrice : product.price,

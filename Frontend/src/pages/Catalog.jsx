@@ -75,7 +75,7 @@ const Catalog = () => {
     const matchPrice = price <= maxPrice;
 
     const matchSearch = product.name.toLowerCase().includes(liveSearch.toLowerCase()) || 
-                        (product.category && product.category.toLowerCase().includes(liveSearch.toLowerCase()));
+                  (product.category && product.category.toLowerCase().includes(liveSearch.toLowerCase()));
 
     return matchCategory && matchPrice && matchSearch;
   }).sort((a, b) => {

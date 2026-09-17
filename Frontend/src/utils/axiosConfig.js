@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-// هنا بنقوله لو احنا أونلاين استخدم رابط الباك إند الحقيقي، لو محلي استخدم localhost
 const axiosInstance = axios.create({
     baseURL: process.env.NODE_ENV === 'production' 
-        ? 'https://your-backend-url.onrender.com' // هنغير الرابط ده بعدين لما نرفع الباك إند
+        ? 'https://your-backend-url.onrender.com'
         : 'http://localhost:5000'
 });
 

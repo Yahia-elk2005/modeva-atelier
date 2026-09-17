@@ -15,17 +15,15 @@ import Checkout from './pages/Checkout';
 import Sale from './pages/Sale';
 import NewArrival from './pages/NewArrival';
 import SupportPage from './pages/SupportPage';
-import Vouchers from './pages/Vouchers'; // <-- تأكد من إضافة هذا الـ Import هنا
+import Vouchers from './pages/Vouchers'; 
 import NotFound from './pages/NotFound';
 
 function App() {
   return (
     <div className="container-fluid p-0 d-flex flex-column min-vh-100">
       <Router>
-        {/* شريط التنقل سيظهر في كل الصفحات */}
         <Navigation /> 
-        
-        {/* محتوى الصفحات المتغير */}
+
         <main className="flex-grow-1">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -46,7 +44,6 @@ function App() {
           </Routes>
         </main>
 
-        {/* الفوتر سيظهر في كل الصفحات من الأسفل */}
         <Footer />
       </Router>
     </div>

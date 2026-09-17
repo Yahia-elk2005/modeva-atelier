@@ -7,7 +7,6 @@ const Footer = () => {
     <footer className="bg-teal text-white pb-4 mt-0" style={{ paddingTop: '100px', backgroundColor: '#008B8B' }}>
       <Container>
         <Row className="gy-4 mb-5">
-          {/* Brand & Info */}
           <Col lg={4} md={12}>
             <h2 className="fw-bold mb-4" style={{ fontFamily: 'Playfair Display', fontSize: '2.5rem', letterSpacing: '1px' }}>MODEVA</h2>
             <table className="text-white small" style={{ borderCollapse: 'separate', borderSpacing: '0 8px' }}>
@@ -28,7 +27,6 @@ const Footer = () => {
             </table>
           </Col>
 
-          {/* Menu */}
           <Col lg={2} md={4} className="mt-lg-5">
             <h6 className="fw-bold mb-4 small">Menu</h6>
             <ul className="list-unstyled small d-grid gap-3 opacity-100">
@@ -36,13 +34,11 @@ const Footer = () => {
               <li><Link to="/new" className="text-white text-decoration-none">New Arrivals</Link></li>
               <li><Link to="/catalog?category=men" className="text-white text-decoration-none">Formal Men</Link></li>
               <li><Link to="/catalog?category=woman" className="text-white text-decoration-none">Formal Woman</Link></li>
-              {/* تفعيل وتوجيه Casual Men و Casual Woman للكاتيجوري الصحيح */}
               <li><Link to="/catalog?category=casual men" className="text-white text-decoration-none">Casual Men</Link></li>
               <li><Link to="/catalog?category=casual woman" className="text-white text-decoration-none">Casual Woman</Link></li>
             </ul>
           </Col>
 
-          {/* Get Help */}
           <Col lg={2} md={4} className="mt-lg-5">
             <h6 className="fw-bold mb-4 small">Get Help</h6>
             <ul className="list-unstyled small d-grid gap-3 opacity-100">
@@ -54,7 +50,6 @@ const Footer = () => {
             </ul>
           </Col>
 
-          {/* Account */}
           <Col lg={2} md={4} className="mt-lg-5">
             <h6 className="fw-bold mb-4 small">Account</h6>
             <ul className="list-unstyled small d-grid gap-3 opacity-100">

@@ -126,7 +126,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     });
 });
 
-// تحديث المقاسات (Fitting Profile)
+
 exports.updateMeasurements = catchAsync(async (req, res, next) => {
     const { measurements } = req.body;
     if (!measurements) {

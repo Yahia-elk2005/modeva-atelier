@@ -21,7 +21,7 @@ module.exports = (err, req, res, next) => {
     err.statusCode = err.statusCode || err.status || 500;
     err.status = err.status || 'error';
 
-    // طباعة الخطأ في الـ Terminal لتتمكن من رؤيته بوضوح
+    
     console.error("ERROR 💥:", err);
 
     let error = { ...err };
@@ -32,7 +32,7 @@ module.exports = (err, req, res, next) => {
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
     if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
 
-    // إرجاع تفاصيل الخطأ مباشرة في الاستجابة لعرضها
+    
     res.status(error.statusCode || 500).json({
         success: false,
         status: error.status,
