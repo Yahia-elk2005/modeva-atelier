@@ -16,6 +16,8 @@ import Sale from './pages/Sale';
 import NewArrival from './pages/NewArrival';
 import SupportPage from './pages/SupportPage';
 import Vouchers from './pages/Vouchers'; 
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/about" element={<About />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/dashboard" element={<ClientDashboard />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/checkout" element={<Checkout />} />

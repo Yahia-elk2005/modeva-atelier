@@ -36,7 +36,13 @@ const Auth = () => {
       toast.success('Welcome back to the Atelier!');
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Authentication failed. Please check your credentials.');
+      if (err.response?.data?.needsVerification) {
+        setOtpData(prev => ({ ...prev, email: loginData.email }));
+        setStep('otp');
+        toast.info('Account inactive. A new verification code has been sent to your email.');
+      } else {
+        toast.error(err.response?.data?.message || 'Authentication failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -70,7 +76,10 @@ const Auth = () => {
     }
     setLoading(true);
     try {
-      const res = await axiosInstance.post('/auth/confirm-email', otpData);
+      const res = await axiosInstance.post('/auth/confirm-email', {
+        email: otpData.email,
+        confirmOTP: otpData.confirmOTP
+      });
       localStorage.setItem('token', res.data.token);
       
       const userRole = res.data.data?.user?.role || res.data.user?.role || 'user';
@@ -136,8 +145,15 @@ const Auth = () => {
                     </Button>
                   </InputGroup>
                 </Form.Group>
-                <Button type="submit" disabled={loading} className="btn-teal w-100 rounded-0 py-3 text-uppercase fw-bold" style={{ letterSpacing: '2px' }}>
+                <Button type="submit" disabled={loading} className="btn-teal w-100 rounded-0 py-3 text-uppercase fw-bold mb-3" style={{ letterSpacing: '2px' }}>
                   {loading ? 'Verifying...' : 'Authorize & Sign In'}
+                </Button>
+                <Button 
+                  variant="link" 
+                  className="text-muted text-decoration-none small p-0" 
+                  onClick={() => setStep('auth')}
+                >
+                  &larr; Back to Sign In
                 </Button>
               </Form>
             </div>
@@ -180,7 +196,16 @@ const Auth = () => {
                         />
                       </Form.Group>
                       <Form.Group className="mb-4">
-                        <Form.Label className="small text-uppercase fw-bold text-muted" style={{ letterSpacing: '1px', fontSize: '0.75rem' }}>Passphrase</Form.Label>
+                        <div className="d-flex justify-content-between align-items-center mb-1">
+                          <Form.Label className="small text-uppercase fw-bold text-muted m-0" style={{ letterSpacing: '1px', fontSize: '0.75rem' }}>Passphrase</Form.Label>
+                          <span 
+                            className="small text-muted text-decoration-underline" 
+                            style={{ cursor: 'pointer', fontSize: '0.75rem' }}
+                            onClick={() => navigate('/forgot-password')}
+                          >
+                            Forgot Password?
+                          </span>
+                        </div>
                         <InputGroup>
                           <Form.Control
                             type={showLoginPassword ? "text" : "password"}

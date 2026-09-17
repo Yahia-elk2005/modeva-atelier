@@ -25,6 +25,18 @@ const userSchema = new mongoose.Schema({
         enum: ["user", "admin"],
         default: "user"
     },
+    isActive: {
+        type: Boolean,
+        default: false
+    },
+    confirmOTP: {
+        type: String,
+        select: false
+    },
+    OTPExpire: {
+        type: Date,
+        select: false
+    },
     membership: {
         type: String,
         enum: ["Standard", "Salon Prime", "VIP Gold"],
@@ -39,6 +51,10 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     subscriptionId: {
+        type: String,
+        default: null
+    },
+    resetToken: {
         type: String,
         default: null
     }

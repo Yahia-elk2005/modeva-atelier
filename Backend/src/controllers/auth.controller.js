@@ -1,131 +1,184 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { promisify } = require("util");
 const crypto = require("crypto");
+const { customAlphabet } = require("nanoid");
 const User = require("../models/user.model");
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 const sendEmail = require("../utils/sendEmail");
 const template = require("../utils/emailTemplate");
 
+const jwtSign = promisify(jwt.sign);
 
-const signToken = (id, role) => {
-    return jwt.sign(
-        { id, role },
-        process.env.SECRET_KEY,
-        { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+const generateOTP = () => {
+    const otpGenerator = customAlphabet("0123456789", 6);
+    return otpGenerator();
 };
 
-const createSendToken = (user, statusCode, res) => {
-    const token = signToken(user._id, user.role);
+const createSendToken = async (user, statusCode, res) => {
+    const token = await jwtSign(
+        { id: user._id, role: user.role }, 
+        process.env.SECRET_KEY, 
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    );
     user.password = undefined;
     res.status(statusCode).json({
         success: true,
-        token,
-        data: { user }
+        token, 
+        data: { user, accessToken: token }
     });
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
-    const { name, email, password, phoneNumber, role } = req.body;
+    const { name, email, password, phoneNumber, role, image } = req.body;
+    
     if (!name || !email || !password) {
         return next(new AppError(400, "Please provide name, email and password."));
     }
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-        return next(new AppError(400, "Email already in use."));
+
+    const findUser = await User.findOne({ isDeleted: false, email });
+    if (findUser) {
+        return next(new AppError(400, "This email is already exist"));
     }
     
-    const confirmOTP = String(Math.floor(100000 + Math.random() * 900000));
-    const newUser = await User.create({
+    const otp = generateOTP();
+    const hashedOTP = await bcrypt.hash(otp, Number(process.env.SALT_ROUND) || 12);
+    const OTPExpire = new Date(Date.now() + 10 * 60 * 1000);
+    
+    // تمرير الباسورد كما هي ليقوم الموديل بتشفيرها (يمنع التشفير المزدوج)
+    const user = await User.create({
         name,
         email,
-        password,
+        password, 
         phoneNumber,
+        image,
         role: role || "user",
         isActive: false,
-        confirmOTP: await bcrypt.hash(confirmOTP, Number(process.env.SALT_ROUND) || 12),
-        OTPExpire: new Date(Date.now() + 10 * 60 * 1000)
+        confirmOTP: hashedOTP,
+        OTPExpire
     });
 
     try {
-        await sendEmail(email, "Confirm your MODEVA Account", template(confirmOTP, name, "Email Confirmation Code"));
+        await sendEmail(email, "Confirm your MODEVA Account", template(otp, name, "Email Confirmation Code"));
     } catch (err) {
         console.error("Email sending failed:", err.message);
     }
 
     res.status(201).json({
         success: true,
-        message: "Account created. Please check your email for the confirmation code."
+        message: "Account created. Please check your email for the confirmation code.",
+        data: user
     });
 });
 
 exports.confirmEmail = catchAsync(async (req, res, next) => {
-    const { email, confirmOTP } = req.body;
-    const user = await User.findOne({ email }).select("+confirmOTP +OTPExpire");
-    if (!user) return next(new AppError(400, "User not found"));
-    if (user.isActive) return next(new AppError(400, "This email is already active"));
-    const check = await bcrypt.compare(confirmOTP, user.confirmOTP);
-    if (!check || user.OTPExpire < Date.now()) {
-        return next(new AppError(400, "Invalid or expired OTP"));
+    const { email, confirmOTP } = req.body; 
+    
+    if (!email || !confirmOTP) {
+        return next(new AppError(400, "Please provide email and verification code."));
     }
-    user.isActive = true;
-    user.confirmOTP = undefined;
-    user.OTPExpire = undefined;
-    await user.save();
-    createSendToken(user, 200, res);
+
+    const findUser = await User.findOne({ email }).select("+confirmOTP +OTPExpire");
+    if (!findUser) return next(new AppError(400, "This email isn't exist please signup"));
+    if (findUser.isActive) return next(new AppError(400, "This email is already active"));
+    
+    // التحقق الدقيق من الوقت
+    if (!findUser.confirmOTP || !findUser.OTPExpire || new Date(findUser.OTPExpire).getTime() < Date.now()) {
+        return next(new AppError(400, "Verification code has expired. Please request a new one."));
+    }
+
+    const check = await bcrypt.compare(confirmOTP, findUser.confirmOTP);
+    if (!check) return next(new AppError(400, "Invalid verification code."));
+    
+    findUser.isActive = true; 
+    findUser.confirmOTP = undefined; 
+    findUser.OTPExpire = undefined; 
+    await findUser.save();
+
+    await createSendToken(findUser, 200, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body; 
+    
     if (!email || !password) {
         return next(new AppError(400, "Please provide email and password."));
     }
-    const user = await User.findOne({ email }).select("+password +role");
-    if (!user || !(await user.correctPassword(password, user.password))) {
+
+    const findUser = await User.findOne({ email, isDeleted: { $ne: true } }).select("+password +role +confirmOTP +OTPExpire");
+    
+    if (!findUser || !(await findUser.correctPassword(password, findUser.password))) {
         return next(new AppError(401, "Incorrect email or password."));
     }
-    if (!user.isActive) {
-        return next(new AppError(401, "This account is inactive. Please verify email first."));
+
+    if (!findUser.isActive) {
+        // توليد كود جديد في حال انتهاء الصلاحية أو عدم وجود كود مسبق
+        if (!findUser.confirmOTP || !findUser.OTPExpire || new Date(findUser.OTPExpire).getTime() < Date.now()) {
+            const otp = generateOTP();
+            findUser.confirmOTP = await bcrypt.hash(otp, Number(process.env.SALT_ROUND) || 12);
+            findUser.OTPExpire = new Date(Date.now() + 10 * 60 * 1000);
+            await findUser.save({ validateBeforeSave: false });
+
+            try {
+                await sendEmail(email, "Confirm your MODEVA Account", template(otp, findUser.name, "Email Confirmation Code"));
+            } catch (err) {
+                console.error("Email sending failed:", err.message);
+            }
+        }
+
+        return res.status(401).json({
+            success: false,
+            needsVerification: true,
+            message: "This account is inactive. A verification code has been sent to your email."
+        });
     }
-    createSendToken(user, 200, res);
+
+    await createSendToken(findUser, 200, res);
 });
 
 exports.forgetPassword = catchAsync(async (req, res, next) => {
     const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return next(new AppError(404, "User not found"));
+    const findUser = await User.findOne({ email, isDeleted: { $ne: true } });
+    if (!findUser) return next(new AppError(404, "This user is not found"));
+    
     const resetToken = crypto.randomBytes(32).toString("hex");
-    user.resetToken = resetToken;
-    await user.save();
-    const link = `http://localhost:3000/reset-password/${resetToken}`;
+    findUser.resetToken = resetToken;
+    await findUser.save({ validateBeforeSave: false });
+    
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const link = `${frontendUrl}/reset-password/${resetToken}`;
+    
     try {
-        await sendEmail(email, "Reset Password Link", template(link, user.name, "Reset Link"));
+        await sendEmail(email, "Reset Password Link", template(link, findUser.name, "Reset Link"));
     } catch (err) {}
+    
     res.status(200).json({
         success: true,
-        message: "Reset link sent to email"
+        message: "Reset link is sent to email"
     });
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
     const { token } = req.params;
-    const { password } = req.body;
+    const { password } = req.body; 
+    
     if (!token) return next(new AppError(400, "Reset token is required"));
-    if (!password || password.length < 6) {
-        return next(new AppError(400, "Password must be 6 characters or more"));
-    }
-    const user = await User.findOne({ resetToken: token });
-    if (!user) return next(new AppError(400, "Reset token is invalid or expired"));
-    user.password = password;
-    user.resetToken = undefined;
-    await user.save();
+    if (!password || password.length < 6) return next(new AppError(400, "Password must be 6 char or more"));
+    
+    const findUser = await User.findOne({ resetToken: token }).select("+resetToken");
+    if (!findUser) return next(new AppError(400, "The reset token is invalid or expired"));
+    
+    // التمرير المباشر لمنع التشفير المزدوج
+    findUser.password = password; 
+    findUser.resetToken = undefined; 
+    await findUser.save();
+    
     res.status(200).json({
         success: true,
         message: "Password reset successfully"
     });
 });
-
 
 exports.updateMeasurements = catchAsync(async (req, res, next) => {
     const { measurements } = req.body;
@@ -139,32 +192,28 @@ exports.updateMeasurements = catchAsync(async (req, res, next) => {
         { new: true, runValidators: true }
     );
 
-    if (!updatedUser) {
-        return next(new AppError(404, "User not found."));
-    }
+    if (!updatedUser) return next(new AppError(404, "User not found."));
 
     res.status(200).json({
         success: true,
         message: "Measurements updated successfully",
-        data: {
-            measurements: updatedUser.measurements
-        }
+        data: { measurements: updatedUser.measurements }
     });
 });
+
 exports.getProfile = catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user._id);
-    if (!user) {
-        return next(new AppError(404, "User not found"));
-    }
+    if (!user) return next(new AppError(404, "User not found"));
+    
     res.status(200).json({
         success: true,
         data: { user }
     });
 });
+
 exports.updateProfileDetails = async (req, res, next) => {
     try {
         const { name, phone, address } = req.body;
-
         const updatedUser = await User.findByIdAndUpdate(
             req.user._id,
             { name, phone, address },
