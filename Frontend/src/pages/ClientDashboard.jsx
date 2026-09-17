@@ -67,13 +67,33 @@ const ClientDashboard = () => {
     fetchData();
   }, [navigate]);
 
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const sessionId = queryParams.get('session_id');
+    const success = queryParams.get('success');
+    
+    if (success === 'true' && sessionId) {
+      axiosInstance.get(`/subscriptions/verify-session?session_id=${sessionId}`)
+        .then(res => {
+          if (res.data.success) {
+            toast.success('Membership upgraded successfully!');
+            fetchData();
+          }
+        })
+        .catch(err => console.error(err));
+        
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   const handleUpgradeMembership = async (plan) => {
     try {
-      const res = await axiosInstance.patch('/users/upgrade-membership', { plan });
-      toast.success(res.data.message);
-      fetchData();
+      const res = await axiosInstance.post('/subscriptions/create-checkout', { plan });
+      if (res.data.success && res.data.url) {
+        window.location.href = res.data.url;
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to upgrade membership.');
+      toast.error(err.response?.data?.message || 'Failed to initiate membership checkout.');
     }
   };
 
@@ -359,7 +379,10 @@ const ClientDashboard = () => {
                         <span className="text-muted small text-uppercase fw-bold" style={{ letterSpacing: '1px', fontSize: '0.7rem' }}>Order ID:</span>
                         <span className="fw-bold ms-2 text-dark">#{order._id.substring(order._id.length - 6).toUpperCase()}</span>
                       </div>
-                      <div className="text-start text-sm-end">
+                      <div className="d-flex align-items-center gap-2">
+                        <Badge bg={order.paymentMethod === 'COD' ? 'warning' : 'dark'} className="text-uppercase rounded-0 px-2 py-1" style={{ fontSize: '0.65rem' }}>
+                          {order.paymentMethod || 'CARD'}
+                        </Badge>
                         <span className="fw-bold text-teal fs-5">{order.total}</span>
                       </div>
                     </div>

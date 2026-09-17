@@ -92,18 +92,22 @@ const Checkout = () => {
         size: item.size || "M"
       }));
 
-      const res = await axiosInstance.post('/orders', { 
+      const payload = {
         items: orderItems,
         shippingAddress: selectedGovernorate,
         shippingCost: currentShippingCost,
-        total: `$${finalTotal.toFixed(2)}`
-      });
+        total: `$${finalTotal.toFixed(2)}`,
+        paymentMethod: paymentMethod.toUpperCase(),
+        discountAmount: appliedDiscount
+      };
 
-      if (res.data && res.data.url) {
+      const res = await axiosInstance.post('/orders', payload);
+
+      if (paymentMethod === 'card' && res.data && res.data.url) {
         toast.success('Redirecting to secure payment gateway...');
         window.location.href = res.data.url;
       } else {
-        toast.success('Order placed successfully!');
+        toast.success('Order placed successfully with Cash on Delivery!');
         setTimeout(() => {
           navigate('/dashboard');
         }, 1500);
@@ -163,46 +167,45 @@ const Checkout = () => {
               <h2 className="mb-2 fs-3 fs-md-2" style={{ fontFamily: 'Playfair Display', color: '#1A1A1A' }}>Select Payment Method</h2>
               <p className="text-muted small mb-4">Transactions are protected with tokenized atelier encryption.</p>
               
-              <div className="p-3 p-md-4 mb-3 border border-2" style={{ borderColor: '#008B8B', backgroundColor: '#F8F9FA' }}>
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <Form.Check 
-                    type="radio"
-                    label={<span className="fw-bold text-uppercase small ms-2" style={{ letterSpacing: '1px' }}>Credit / Debit Card</span>}
-                    checked={paymentMethod === 'card'}
-                    onChange={() => setPaymentMethod('card')}
-                    className="rounded-0"
-                  />
-                  <div className="d-flex gap-1 gap-md-2">
-                    <span className="bg-dark text-white px-2 py-1 fw-bold text-uppercase" style={{ fontSize: '0.6rem' }}>VISA</span>
-                    <span className="bg-secondary text-white px-2 py-1 fw-bold text-uppercase" style={{ fontSize: '0.6rem' }}>MC</span>
+              <Row className="g-3">
+                <Col xs={12} sm={6}>
+                  <div 
+                    className={`p-3 p-md-4 border border-2 h-100 ${paymentMethod === 'card' ? 'border-dark bg-light' : 'bg-white'}`}
+                    onClick={() => setPaymentMethod('card')}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <Form.Check 
+                        type="radio"
+                        label={<span className="fw-bold text-uppercase small" style={{ letterSpacing: '1px' }}>Credit / Debit Card</span>}
+                        checked={paymentMethod === 'card'}
+                        onChange={() => setPaymentMethod('card')}
+                        className="rounded-0 m-0"
+                      />
+                    </div>
+                    <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Secure Stripe Checkout</span>
                   </div>
-                </div>
+                </Col>
 
-                <Form className="mt-3" onSubmit={(e) => e.preventDefault()}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="small text-uppercase text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>Name on Card</Form.Label>
-                    <Form.Control type="text" className="rounded-0 p-3 shadow-none bg-white" placeholder="HOSNA SALEH" />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="small text-uppercase text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>Card Number</Form.Label>
-                    <Form.Control type="text" className="rounded-0 p-3 shadow-none bg-white" placeholder="0000 0000 0000 0000" />
-                  </Form.Group>
-                  <Row className="g-2 g-md-3">
-                    <Col xs={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="small text-uppercase text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>Expiry Date</Form.Label>
-                        <Form.Control type="text" className="rounded-0 p-3 shadow-none bg-white" placeholder="MM / YY" />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="small text-uppercase text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>Security CVV</Form.Label>
-                        <Form.Control type="password" className="rounded-0 p-3 shadow-none bg-white" placeholder="***" />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </Form>
-              </div>
+                <Col xs={12} sm={6}>
+                  <div 
+                    className={`p-3 p-md-4 border border-2 h-100 ${paymentMethod === 'cod' ? 'border-dark bg-light' : 'bg-white'}`}
+                    onClick={() => setPaymentMethod('cod')}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <Form.Check 
+                        type="radio"
+                        label={<span className="fw-bold text-uppercase small" style={{ letterSpacing: '1px' }}>Cash on Delivery</span>}
+                        checked={paymentMethod === 'cod'}
+                        onChange={() => setPaymentMethod('cod')}
+                        className="rounded-0 m-0"
+                      />
+                    </div>
+                    <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Pay upon receipt</span>
+                  </div>
+                </Col>
+              </Row>
 
             </div>
 
@@ -216,7 +219,7 @@ const Checkout = () => {
                 onClick={handleAuthorizePayment}
                 disabled={loading || cartItems.length === 0}
               >
-                {loading ? 'Processing...' : 'Authorize Payment'}
+                {loading ? 'Processing...' : paymentMethod === 'card' ? 'Proceed to Stripe' : 'Authorize Payment'}
               </Button>
             </div>
           </Col>

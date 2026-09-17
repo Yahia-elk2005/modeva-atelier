@@ -317,12 +317,12 @@ const Admin = () => {
           <Table responsive striped bordered hover align="middle" className="bg-white">
             <thead>
               <tr>
-                <th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Actions</th>
+                <th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
-                <tr><td colSpan="6" className="text-center py-4">No orders found.</td></tr>
+                <tr><td colSpan="7" className="text-center py-4">No orders found.</td></tr>
               ) : (
                 orders.map(order => (
                   <tr key={order._id}>
@@ -334,6 +334,11 @@ const Admin = () => {
                       ))}
                     </td>
                     <td className="fw-bold text-teal">{order.total}</td>
+                    <td>
+                      <Badge bg={order.paymentMethod === 'COD' ? 'warning' : 'dark'} className="text-uppercase">
+                        {order.paymentMethod || 'CARD'}
+                      </Badge>
+                    </td>
                     <td>
                       <Badge bg={order.status === 'Cancelled' ? 'secondary' : order.status === 'Dispatched' ? 'success' : 'info'}>
                         {order.status || 'In Progress'}

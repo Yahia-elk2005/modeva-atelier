@@ -5,9 +5,15 @@ const catchAsync = require("../utils/catchAsync");
 
 exports.getLoggedUserCart = catchAsync(async (req, res, next) => {
     let cart = await Cart.findOne({ user: req.user._id }).populate("cartItems.product");
+    
     if (!cart) {
-        cart = await Cart.create({ user: req.user._id, cartItems: [], totalCartPrice: 0 });
+        cart = await Cart.findOneAndUpdate(
+            { user: req.user._id },
+            { $setOnInsert: { cartItems: [], totalCartPrice: 0 } },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        ).populate("cartItems.product");
     }
+
     res.status(200).json({
         success: true,
         data: cart

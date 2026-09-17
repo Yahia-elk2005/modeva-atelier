@@ -31,6 +31,11 @@ const orderSchema = mongoose.Schema({
         type: Number,
         default: 25
     },
+    paymentMethod: {
+        type: String,
+        enum: ["CARD", "COD"],
+        default: "CARD"
+    },
     status: {
         type: String,
         default: "In Progress"
@@ -45,5 +50,4 @@ const orderSchema = mongoose.Schema({
 });
 
 const Orders = mongoose.model("order", orderSchema);
-
 module.exports = Orders;

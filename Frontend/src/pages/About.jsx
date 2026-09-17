@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 
 const aboutImg1 = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop';
-const aboutImg2 = 'https://images.unsplash.com/photo-1445205170230-053b830160b4?q=80&w=800&auto=format&fit=crop';
+const aboutImg2 = 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=800&auto=format&fit=crop'; // صورة ثانية جديدة بجودة عالية وتعبر عن الخياطة الراقية
 
 const About = () => {
   useEffect(() => {
@@ -28,6 +28,7 @@ const About = () => {
               alt="Modeva Atelier" 
               className="w-100 rounded-0" 
               style={{ height: '500px', objectFit: 'cover' }} 
+              onError={(e) => { e.target.src = 'https://placehold.co/800x500?text=Modeva+Atelier'; }}
             />
           </div>
         </Col>
@@ -69,6 +70,7 @@ const About = () => {
               alt="Modeva Craftsmanship" 
               className="w-100 rounded-0" 
               style={{ height: '500px', objectFit: 'cover' }} 
+              onError={(e) => { e.target.src = 'https://placehold.co/800x500?text=Modeva+Craftsmanship'; }}
             />
           </div>
         </Col>
