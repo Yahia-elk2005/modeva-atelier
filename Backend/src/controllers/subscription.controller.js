@@ -5,18 +5,16 @@ const catchAsync = require('../utils/catchAsync');
 
 exports.createSubscriptionCheckout = catchAsync(async (req, res, next) => {
     const { plan } = req.body;
-    
-    const user = await User.findById(req.user._id);
 
+    const user = await User.findById(req.user._id);
     const tierLevels = {
         'Standard': 1,
         'Salon Prime': 2,
         'VIP Gold': 3
     };
-
+    
     const currentTierLevel = tierLevels[user.membership || 'Standard'];
     const requestedTierLevel = tierLevels[plan];
-
     const isSubscriptionActive = user.membershipExpiresAt && new Date(user.membershipExpiresAt) > new Date();
 
     if (isSubscriptionActive) {
@@ -24,21 +22,20 @@ exports.createSubscriptionCheckout = catchAsync(async (req, res, next) => {
             const expiryDate = new Date(user.membershipExpiresAt).toLocaleDateString();
             return next(new AppError(400, `You are already subscribed to the ${plan} tier. Your subscription will expire on ${expiryDate}.`));
         }
-
         if (requestedTierLevel < currentTierLevel) {
             const expiryDate = new Date(user.membershipExpiresAt).toLocaleDateString();
             return next(new AppError(400, `You are currently on the higher ${user.membership} tier, which remains active until ${expiryDate}. You cannot downgrade to a lower plan until it expires.`));
         }
     }
 
-    let unitAmount = 2500; 
+    let unitAmount = 2500;
     let planDisplayName = 'Salon Prime Membership';
 
     if (plan === 'VIP Gold') {
-        unitAmount = 5000; 
+        unitAmount = 5000;
         planDisplayName = 'VIP Gold Membership';
     } else if (plan === 'Salon Prime') {
-        unitAmount = 2500; 
+        unitAmount = 2500;
         planDisplayName = 'Salon Prime Membership';
     } else {
         return next(new AppError(400, 'Invalid membership plan selected'));
@@ -52,8 +49,7 @@ exports.createSubscriptionCheckout = catchAsync(async (req, res, next) => {
             name: user.name,
         });
         customerId = customer.id;
-        user.stripeCustomerId = customerId;
-        await user.save();
+        await User.findByIdAndUpdate(user._id, { stripeCustomerId: customerId });
     }
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -92,7 +88,6 @@ exports.createSubscriptionCheckout = catchAsync(async (req, res, next) => {
 exports.stripeWebhook = async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
-
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {

@@ -20,6 +20,25 @@ const userSchema = new mongoose.Schema({
         minlength: 6,
         select: false
     },
+    phoneNumber: {
+        type: String
+    },
+    phone: {
+        type: String
+    },
+    image: {
+        type: String
+    },
+    address: {
+        type: String,
+        default: "Giza Governorate, Egypt"
+    },
+    measurements: {
+        bust: { type: String, default: "84 cm" },
+        waist: { type: String, default: "66 cm" },
+        highHip: { type: String, default: "92 cm" },
+        stature: { type: String, default: "175 cm" }
+    },
     role: {
         type: String,
         enum: ["user", "admin"],
@@ -57,6 +76,10 @@ const userSchema = new mongoose.Schema({
     resetToken: {
         type: String,
         default: null
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true,
@@ -74,5 +97,4 @@ userSchema.methods.correctPassword = async function(candidatePassword, userPassw
 };
 
 const User = mongoose.model("User", userSchema);
-
 module.exports = User;

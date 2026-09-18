@@ -220,6 +220,8 @@ const Admin = () => {
                   <option value="Casual">Casual</option>
                   <option value="Casual Men">Casual Men</option>
                   <option value="Casual Woman">Casual Woman</option>
+                  <option value="Evening Wear">Evening Wear</option>
+                  <option value="Tailored Suits">Tailored Suits</option>
                 </Form.Select>
               </Col>
 
@@ -270,7 +272,7 @@ const Admin = () => {
             </Row>
 
             <div className="d-flex gap-2">
-              <Button className="btn-teal" type="submit">{editId ? 'Update Product' : 'Add Product'}</Button>
+              <Button className="btn-teal" type="submit" style={{ backgroundColor: '#007373', border: 'none' }}>{editId ? 'Update Product' : 'Add Product'}</Button>
               {editId && <Button variant="secondary" onClick={resetForm}>Cancel Edit</Button>}
             </div>
           </Form>
@@ -376,17 +378,20 @@ const Admin = () => {
                 <Form.Control type="number" placeholder="Min Order ($)" value={voucherForm.minOrder} onChange={(e) => setVoucherForm({...voucherForm, minOrder: e.target.value})} />
               </Col>
               <Col md={4} className="mb-3">
-                <Form.Control type="text" placeholder="Expiry Date (e.g. May 15, 2026)" value={voucherForm.expiryDate} onChange={(e) => setVoucherForm({...voucherForm, expiryDate: e.target.value})} required />
+                <Form.Control type="date" value={voucherForm.expiryDate} onChange={(e) => setVoucherForm({...voucherForm, expiryDate: e.target.value})} required />
               </Col>
               <Col md={4} className="mb-3">
                 <Form.Select value={voucherForm.category} onChange={(e) => setVoucherForm({...voucherForm, category: e.target.value})}>
                   <option value="Active Privileges">Active Privileges</option>
+                  <option value="Seasonal Offers">Seasonal Offers</option>
+                  <option value="Welcome Passes">Welcome Passes</option>
+                  <option value="Compensation">Compensation</option>
                   <option value="Salon Master Pass">Salon Master Pass</option>
                   <option value="Concierge Fitting">Concierge Fitting</option>
                 </Form.Select>
               </Col>
             </Row>
-            <Button className="btn-teal" type="submit">Create Voucher Pass</Button>
+            <Button className="btn-teal" type="submit" style={{ backgroundColor: '#007373', border: 'none' }}>Create Voucher Pass</Button>
           </Form>
 
           <Table responsive striped bordered hover align="middle" className="bg-white">
