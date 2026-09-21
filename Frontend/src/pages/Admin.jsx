@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Form, Button, Row, Col, Badge, Tabs, Tab } from 'react-bootstrap';
+import { Container, Table, Form, Button, Row, Col, Badge, Tabs, Tab, Modal } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import axiosInstance from '../utils/axiosConfig';
 
@@ -8,6 +8,10 @@ const Admin = () => {
   const [orders, setOrders] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [editId, setEditId] = useState(null);
+
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [deleteConfig, setDeleteConfig] = useState({ show: false, type: '', id: null, message: '' });
+
   const [formData, setFormData] = useState({ 
     name: '', 
     category: '', 
@@ -70,6 +74,33 @@ const Admin = () => {
     };
   };
 
+  const handleOpenAddProduct = () => {
+    resetForm();
+    setShowProductModal(true);
+  };
+
+  const handleEdit = (product) => {
+    setEditId(product._id);
+    setFormData({
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      rating: product.rating,
+      image: product.image,
+      quantity: product.quantity || 10,
+      description: product.description || '',
+      onSale: product.onSale || false,
+      discountPrice: product.discountPrice || '',
+      isNewArrival: product.isNewArrival || false
+    });
+    setShowProductModal(true);
+  };
+
+  const handleCloseProductModal = () => {
+    setShowProductModal(false);
+    resetForm();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -86,7 +117,7 @@ const Admin = () => {
         await axiosInstance.post('/products', payload);
         toast.success('Product added successfully!');
       }
-      resetForm();
+      handleCloseProductModal();
       fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Operation failed');
@@ -116,43 +147,38 @@ const Admin = () => {
     }
   };
 
-  const handleDeleteVoucher = async (id) => {
-    if (window.confirm('Are you sure you want to delete this voucher?')) {
-      try {
-        await axiosInstance.delete(`/api/vouchers/${id}`);
-        toast.success('Voucher deleted successfully!');
-        fetchData();
-      } catch (err) {
-        toast.error('Failed to delete voucher.');
-      }
-    }
+  const promptDeleteProduct = (id) => {
+    setDeleteConfig({ show: true, type: 'product', id, message: 'Are you sure you want to delete this product?' });
   };
 
-  const handleEdit = (product) => {
-    setEditId(product._id);
-    setFormData({
-      name: product.name,
-      category: product.category,
-      price: product.price,
-      rating: product.rating,
-      image: product.image,
-      quantity: product.quantity || 10,
-      description: product.description || '',
-      onSale: product.onSale || false,
-      discountPrice: product.discountPrice || '',
-      isNewArrival: product.isNewArrival || false
-    });
+  const promptDeleteOrder = (id) => {
+    setDeleteConfig({ show: true, type: 'order', id, message: 'Are you sure you want to delete/cancel this order?' });
   };
 
-  const handleDeleteProduct = async (id) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
+  const promptDeleteVoucher = (id) => {
+    setDeleteConfig({ show: true, type: 'voucher', id, message: 'Are you sure you want to delete this voucher?' });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { type, id } = deleteConfig;
+    if (!id) return;
+
+    try {
+      if (type === 'product') {
         await axiosInstance.delete(`/products/${id}`);
         toast.success('Product deleted!');
-        fetchData();
-      } catch (err) {
-        toast.error('Failed to delete product');
+      } else if (type === 'order') {
+        await axiosInstance.delete(`/orders/${id}`);
+        toast.success('Order removed successfully!');
+      } else if (type === 'voucher') {
+        await axiosInstance.delete(`/api/vouchers/${id}`);
+        toast.success('Voucher deleted successfully!');
       }
+      fetchData();
+    } catch (err) {
+      toast.error(`Failed to delete ${type}`);
+    } finally {
+      setDeleteConfig({ show: false, type: '', id: null, message: '' });
     }
   };
 
@@ -170,18 +196,6 @@ const Admin = () => {
       discountPrice: '',
       isNewArrival: false
     });
-  };
-
-  const handleDeleteOrder = async (id) => {
-    if (window.confirm('Are you sure you want to delete/cancel this order?')) {
-      try {
-        await axiosInstance.delete(`/orders/${id}`);
-        toast.success('Order removed successfully!');
-        fetchData();
-      } catch (err) {
-        toast.error('Failed to delete order');
-      }
-    }
   };
 
   const handleUpdateOrderStatus = async (id, newStatus) => {
@@ -205,77 +219,14 @@ const Admin = () => {
       </div>
       <Tabs defaultActiveKey="products" className="mb-4">
         <Tab eventKey="products" title="Manage Products">
-          <Form onSubmit={handleSubmit} className="mb-5 bg-light p-4 rounded shadow-sm">
-            <h5 className="mb-3">{editId ? 'Edit Product' : 'Add New Product'}</h5>
-            <Row>
-              <Col md={6} className="mb-3">
-                <Form.Control type="text" placeholder="Product Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
-              </Col>
-              
-              <Col md={6} className="mb-3">
-                <Form.Select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} required>
-                  <option value="">Select Category</option>
-                  <option value="Woman">Woman</option>
-                  <option value="Men">Men</option>
-                  <option value="Casual">Casual</option>
-                  <option value="Casual Men">Casual Men</option>
-                  <option value="Casual Woman">Casual Woman</option>
-                  <option value="Evening Wear">Evening Wear</option>
-                  <option value="Tailored Suits">Tailored Suits</option>
-                </Form.Select>
-              </Col>
-
-              <Col md={3} className="mb-3">
-                <Form.Control type="number" placeholder="Original Price" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required />
-              </Col>
-              <Col md={3} className="mb-3">
-                <Form.Control type="number" placeholder="Quantity" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: e.target.value})} required />
-              </Col>
-              <Col md={3} className="mb-3">
-                <Form.Control type="number" step="0.01" placeholder="Rating (e.g. 4.95)" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} required />
-              </Col>
-              <Col md={3} className="mb-3">
-                <Form.Control type="file" accept="image/*" onChange={handleImageUpload} required={!editId} />
-              </Col>
-
-              <Col md={6} className="mb-3">
-                <Form.Check 
-                  type="checkbox" 
-                  label="Display in Archival Sale" 
-                  checked={formData.onSale}
-                  onChange={(e) => setFormData({...formData, onSale: e.target.checked})}
-                  className="fw-bold text-teal"
-                />
-              </Col>
-
-              <Col md={6} className="mb-3">
-                <Form.Check 
-                  type="checkbox" 
-                  label="Feature in New Arrivals" 
-                  checked={formData.isNewArrival}
-                  onChange={(e) => setFormData({...formData, isNewArrival: e.target.checked})}
-                  className="fw-bold text-teal"
-                />
-              </Col>
-
-              {formData.onSale && (
-                <Col md={6} className="mb-3">
-                  <Form.Control 
-                    type="number" 
-                    placeholder="Sale / Discount Price" 
-                    value={formData.discountPrice} 
-                    onChange={(e) => setFormData({...formData, discountPrice: e.target.value})} 
-                    required={formData.onSale} 
-                  />
-                </Col>
-              )}
-            </Row>
-
-            <div className="d-flex gap-2">
-              <Button className="btn-teal" type="submit" style={{ backgroundColor: '#007373', border: 'none' }}>{editId ? 'Update Product' : 'Add Product'}</Button>
-              {editId && <Button variant="secondary" onClick={resetForm}>Cancel Edit</Button>}
-            </div>
-          </Form>
+          <div className="d-flex justify-content-end mb-3">
+            <Button 
+              style={{ backgroundColor: '#007373', border: 'none' }} 
+              onClick={handleOpenAddProduct}
+            >
+              + Add New Product
+            </Button>
+          </div>
 
           <Table responsive striped bordered hover align="middle">
             <thead>
@@ -307,7 +258,7 @@ const Admin = () => {
                   <td>{product.quantity}</td>
                   <td className="text-nowrap">
                     <Button variant="warning" size="sm" className="me-2 text-white" onClick={() => handleEdit(product)}>Edit</Button>
-                    <Button variant="danger" size="sm" onClick={() => handleDeleteProduct(product._id)}>Delete</Button>
+                    <Button variant="danger" size="sm" onClick={() => promptDeleteProduct(product._id)}>Delete</Button>
                   </td>
                 </tr>
               ))}
@@ -349,7 +300,7 @@ const Admin = () => {
                     </td>
                     <td className="text-nowrap">
                       <Button variant="success" size="sm" className="me-2" disabled={order.status === 'Dispatched'} onClick={() => handleUpdateOrderStatus(order._id, 'Dispatched')}>Dispatch</Button>
-                      <Button variant="danger" size="sm" onClick={() => handleDeleteOrder(order._id)}>Cancel/Delete</Button>
+                      <Button variant="danger" size="sm" onClick={() => promptDeleteOrder(order._id)}>Cancel/Delete</Button>
                     </td>
                   </tr>
                 ))
@@ -412,7 +363,7 @@ const Admin = () => {
                     <td>${v.minOrder}</td>
                     <td>{v.expiryDate}</td>
                     <td>
-                      <Button variant="danger" size="sm" onClick={() => handleDeleteVoucher(v._id)}>Delete</Button>
+                      <Button variant="danger" size="sm" onClick={() => promptDeleteVoucher(v._id)}>Delete</Button>
                     </td>
                   </tr>
                 ))
@@ -421,6 +372,121 @@ const Admin = () => {
           </Table>
         </Tab>
       </Tabs>
+
+      <Modal show={showProductModal} onHide={handleCloseProductModal} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>{editId ? 'Edit Product' : 'Add New Product'}</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleSubmit}>
+          <Modal.Body>
+            <Row>
+              <Col md={6} className="mb-3">
+                <Form.Label>Product Name</Form.Label>
+                <Form.Control type="text" placeholder="Product Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
+              </Col>
+              
+              <Col md={6} className="mb-3">
+                <Form.Label>Category</Form.Label>
+                <Form.Select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} required>
+                  <option value="">Select Category</option>
+                  <option value="Woman">Woman</option>
+                  <option value="Men">Men</option>
+                  <option value="Casual">Casual</option>
+                  <option value="Casual Men">Casual Men</option>
+                  <option value="Casual Woman">Casual Woman</option>
+                  <option value="Evening Wear">Evening Wear</option>
+                  <option value="Tailored Suits">Tailored Suits</option>
+                </Form.Select>
+              </Col>
+
+              <Col md={3} className="mb-3">
+                <Form.Label>Original Price</Form.Label>
+                <Form.Control type="number" placeholder="Original Price" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required />
+              </Col>
+              <Col md={3} className="mb-3">
+                <Form.Label>Quantity</Form.Label>
+                <Form.Control type="number" placeholder="Quantity" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: e.target.value})} required />
+              </Col>
+              <Col md={3} className="mb-3">
+                <Form.Label>Rating</Form.Label>
+                <Form.Control type="number" step="0.01" placeholder="Rating (e.g. 4.95)" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} required />
+              </Col>
+              <Col md={3} className="mb-3">
+                <Form.Label>Product Image</Form.Label>
+                <Form.Control type="file" accept="image/*" onChange={handleImageUpload} required={!editId} />
+              </Col>
+
+              <Col md={6} className="mb-3">
+                <Form.Check 
+                  type="checkbox" 
+                  label="Display in Archival Sale" 
+                  checked={formData.onSale}
+                  onChange={(e) => setFormData({...formData, onSale: e.target.checked})}
+                  className="fw-bold text-teal"
+                />
+              </Col>
+
+              <Col md={6} className="mb-3">
+                <Form.Check 
+                  type="checkbox" 
+                  label="Feature in New Arrivals" 
+                  checked={formData.isNewArrival}
+                  onChange={(e) => setFormData({...formData, isNewArrival: e.target.checked})}
+                  className="fw-bold text-teal"
+                />
+              </Col>
+
+              {formData.onSale && (
+                <Col md={6} className="mb-3">
+                  <Form.Label>Sale / Discount Price</Form.Label>
+                  <Form.Control 
+                    type="number" 
+                    placeholder="Sale / Discount Price" 
+                    value={formData.discountPrice} 
+                    onChange={(e) => setFormData({...formData, discountPrice: e.target.value})} 
+                    required={formData.onSale} 
+                  />
+                </Col>
+              )}
+            </Row>
+            {formData.image && (
+              <div className="mt-2 text-center">
+                <small className="text-muted d-block mb-1">Image Preview:</small>
+                <img 
+                  src={formData.image} 
+                  alt="Preview" 
+                  style={{ maxHeight: '100px', borderRadius: '4px' }} 
+                />
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseProductModal}>Cancel</Button>
+            <Button className="btn-teal" type="submit" style={{ backgroundColor: '#007373', border: 'none' }}>
+              {editId ? 'Update Product' : 'Add Product'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      <Modal show={deleteConfig.show} onHide={() => setDeleteConfig({ show: false, type: '', id: null, message: '' })} centered size="sm">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="text-danger fs-5 fw-bold">Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center py-4">
+          <div className="mb-3 text-danger fs-1">🫷🗑️🫸</div>
+          <p className="mb-1 fw-semibold">{deleteConfig.message}</p>
+          <small className="text-muted">This action cannot be undone.</small>
+        </Modal.Body>
+        <Modal.Footer className="border-0 justify-content-center pt-0 pb-4">
+          <Button variant="secondary" className="px-4" onClick={() => setDeleteConfig({ show: false, type: '', id: null, message: '' })}>
+            Cancel
+          </Button>
+          <Button variant="danger" className="px-4" onClick={handleConfirmDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

@@ -67,3 +67,7 @@ body {
 .Toastify__progress-bar--error {
   background: rgba(255, 255, 255, 0.8) !important;
 }
+.btn-teal:hover {
+  background-color: #004545;
+  color: white;
+}

@@ -8,15 +8,15 @@ const ProductCard = ({ product }) => {
   const productId = product?._id || product?.id;
 
   return (
-    <Card className="border-0 h-100 bg-transparent rounded-0">
+    <Card className="border-0 h-100 bg-transparent rounded-0 d-flex flex-column">
       <Link to={`/product/${productId}`} className="text-decoration-none">
-        <div className="position-relative">
-          <Card.Img 
-            variant="top" 
+        <div className="position-relative overflow-hidden" style={{ height: '360px' }}>
+          <Card.Img
+            variant="top"
             src={product?.image || FALLBACK_IMAGE}
             onError={(e) => { e.target.onerror = null; e.target.src = FALLBACK_IMAGE; }}
-            style={{ height: '360px', objectFit: 'cover' }}
-            className="rounded-0 mb-3"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            className="rounded-0"
           />
           {product?.onSale && (
             <span className="position-absolute bg-danger text-white px-2 py-1 small fw-bold" style={{ top: '10px', left: '10px', fontSize: '0.7rem' }}>
@@ -28,18 +28,30 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
       </Link>
-      
-      <Card.Body className="p-0 d-flex flex-column">
+
+      <Card.Body className="p-0 pt-3 d-flex flex-column flex-grow-1">
         <p className="text-muted small mb-1 text-uppercase" style={{ letterSpacing: '1px', fontSize: '0.65rem' }}>
           {product?.category || 'PRODUCT CATEGORY'}
         </p>
-        
+
         <Link to={`/product/${productId}`} className="text-decoration-none">
-          <h5 className="mb-2 text-dark" style={{ fontFamily: 'Playfair Display', fontSize: '1.4rem' }}>
+          <h5 
+            className="mb-2 text-dark" 
+            style={{ 
+              fontFamily: 'Playfair Display', 
+              fontSize: '1.2rem', 
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              minHeight: '2.8em',
+              lineHeight: '1.4'
+            }}
+          >
             {product?.name || 'Product Name'}
           </h5>
         </Link>
-        
+
         <div className="mb-3">
           {product?.originalPrice ? (
             <div>
@@ -47,17 +59,19 @@ const ProductCard = ({ product }) => {
               <span className="text-danger fw-bold">${product.price}</span>
             </div>
           ) : (
-            <span className="text-secondary small">${product?.price || '300'}</span>
+            <span className="text-secondary small fw-bold">${product?.price || '300'}</span>
           )}
         </div>
 
-        <Link 
-          to={`/product/${productId}`}
-          className="btn btn-teal rounded-0 mt-auto text-white text-decoration-none"
-          style={{ width: 'fit-content', fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', padding: '8px 20px' }}
-        >
-          SHOP NOW
-        </Link>
+        <div className="mt-auto">
+          <Link
+            to={`/product/${productId}`}
+            className="btn btn-teal rounded-0 text-white text-decoration-none text-center d-inline-block"
+            style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', padding: '8px 20px', width: 'auto' }}
+          >
+            SHOP NOW
+          </Link>
+        </div>
       </Card.Body>
     </Card>
   );
