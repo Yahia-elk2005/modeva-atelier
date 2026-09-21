@@ -81,7 +81,7 @@ const Wishlist = () => {
   return (
     <Container className="my-4 my-md-5 py-4 py-md-5">
       <ToastContainer position="top-right" autoClose={3000} />
-
+      
       <Modal show={showFilterModal} onHide={() => setShowFilterModal(false)} centered>
         <Modal.Header closeButton className="rounded-0 border-0 bg-light">
           <Modal.Title style={{ fontFamily: "Playfair Display" }}>Sort Vault Collection</Modal.Title>
@@ -138,7 +138,6 @@ const Wishlist = () => {
             </Button>
           ))}
         </div>
-
         <div className="d-flex gap-2 w-100 w-lg-auto">
           <Button 
             variant="outline-dark" 
@@ -162,10 +161,17 @@ const Wishlist = () => {
       <Row className="g-4">
         {filteredItems.length === 0 ? (
           <Col className="text-center py-5">
-            <h4 style={{ fontFamily: "Playfair Display" }}>No items match your filter.</h4>
-            <Button className="btn-teal rounded-0 mt-3 px-4 py-2 text-uppercase fw-bold" onClick={() => setSelectedCategory("all")}>
-              Reset Filters
-            </Button>
+            <h4 style={{ fontFamily: "Playfair Display" }} className="mb-3">
+              {wishlistItems.length === 0 ? "Your private vault is currently empty." : "No items match your filter."}
+            </h4>
+            <p className="text-muted small mb-4">
+              Explore our catalog and add your favorite couture silhouettes to your wishlist.
+            </p>
+            <Link to="/catalog">
+              <Button className="btn-teal rounded-0 px-4 py-3 text-uppercase fw-bold" style={{ letterSpacing: '1px', fontSize: '0.8rem' }}>
+                Browse Catalog & Add Items
+              </Button>
+            </Link>
           </Col>
         ) : (
           filteredItems.map((item) => {
@@ -201,9 +207,7 @@ const Wishlist = () => {
                       {prodName}
                     </h4>
                   </Link>
-
                   <p className="fw-bold mb-3">${prodPrice}</p>
-
                   <div className="mt-auto pt-3 border-top">
                     <Button
                       onClick={() => moveToCart(prodId)}
